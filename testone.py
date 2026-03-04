@@ -1,26 +1,23 @@
 import pytest
 from playwright.sync_api import sync_playwright, expect
 
-# Change scope to "module" to run setup ONLY ONCE for this file
-@pytest.fixture(scope="module")
-def browser_context():
-    print("\n[Setup] Launching browser once for the module...")
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        # Create the page and navigate ONCE
-        page = browser.new_page()
-        page.goto("https://testautomationpractice.blogspot.com/p/playwrightpractice.html")
-        
-        yield page 
-        
-        print("\n[Teardown] Closing browser after all tests...")
-        browser.close()
+@pytest.mark.usefixtures("browser_context")
+class TestPlaywright:
 
-def test_page_navigation(browser_context):
-    page = browser_context
-    expect(page).to_have_title("Automation Testing Practice: PlaywrightPractice")
+    def test_page_navigation(self,browser_context):
+        page = browser_context
+        expect(page).to_have_title("Automation Testing Practice: PlaywrightPractice")
 
-def test_enter_input(browser_context):
-    page = browser_context
-    # Note: Using 'textbox' role for input fields
-    page.get_by_role("textbox", name="Name:").fill("test")
+    def test_enter_input(self,browser_context):
+        page = browser_context
+        # Note: Using 'textbox' role for input fields
+        textbox = page.get_by_role("textbox", name="Name:")
+        textbox.fill("test")
+        getInputValue = textbox.input_value()
+        expect(textbox,'Input value should be present').to_have_value('test')
+
+    def test_click_on_checkbox(self,browser_context):
+        page = browser_context
+        checkbox = page.get_by_role('checkbox',name = 'Accept term')
+        checkbox.check()
+        expect(checkbox, 'Checkbox should be checked').to_be_checked()

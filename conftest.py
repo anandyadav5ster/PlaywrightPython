@@ -1,5 +1,6 @@
 import pytest
 import base64
+from playwright.sync_api import sync_playwright
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
@@ -28,3 +29,18 @@ def pytest_runtest_makereport(item, call):
                 image_html = f'<div><b>{label}:</b><br><img src="data:image/png;base64,{encoded}" style="width:600px;"></div>'
                 extra.append(pytest_html.extras.html(image_html))
                 report.extra = extra
+
+# Change scope to "module" to run setup ONLY ONCE for this file
+@pytest.fixture(scope="module")
+def browser_context():
+    print("\n[Setup] Launching browser once for the module...")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        # Create the page and navigate ONCE
+        page = browser.new_page()
+        page.goto("https://testautomationpractice.blogspot.com/p/playwrightpractice.html")
+        
+        yield page 
+        
+        print("\n[Teardown] Closing browser after all tests...")
+        browser.close()
